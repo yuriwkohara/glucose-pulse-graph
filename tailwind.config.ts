@@ -52,6 +52,26 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				danger: {
+					DEFAULT: 'hsl(var(--danger))',
+					foreground: 'hsl(var(--danger-foreground))'
+				},
+				medical: {
+					bg: 'hsl(var(--medical-bg))'
+				},
+				glucose: {
+					normal: 'hsl(var(--glucose-normal))',
+					warning: 'hsl(var(--glucose-warning))',
+					danger: 'hsl(var(--glucose-danger))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -85,6 +105,10 @@ export default {
 						height: '0'
 					}
 				}
+			},
+			backgroundImage: {
+				'gradient-medical': 'var(--gradient-medical)',
+				'gradient-card': 'var(--gradient-card)'
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
