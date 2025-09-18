@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -14,6 +15,7 @@ interface GlucoseReading {
 
 const GlucoseMonitor = () => {
   const [currentGlucose, setCurrentGlucose] = useState<number>(125);
+  const navigate = useNavigate();
   const [readings, setReadings] = useState<GlucoseReading[]>([
     { id: 1, value: 142, timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), time: '4h atrás' },
     { id: 2, value: 138, timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), time: '3h atrás' },
@@ -69,21 +71,80 @@ const GlucoseMonitor = () => {
   };
 
   const predictionData = [
-    { time: 'agora', accuracy: 97 },
-    { time: 'daqui 5min', accuracy: 88 },
-    { time: 'daqui 15min', accuracy: 84 },
-    { time: 'daqui 30min', accuracy: 79 },
-    { time: 'daqui 1h', accuracy: 75 }
+    { time: 'agora', glucose: currentGlucose },
+    { time: '5min', glucose: Math.round(currentGlucose + (Math.random() - 0.5) * 20) },
+    { time: '15min', glucose: Math.round(currentGlucose + (Math.random() - 0.5) * 30) },
+    { time: '30min', glucose: Math.round(currentGlucose + (Math.random() - 0.5) * 40) },
+    { time: '45min', glucose: Math.round(currentGlucose + (Math.random() - 0.5) * 50) },
+    { time: '1h', glucose: Math.round(currentGlucose + (Math.random() - 0.5) * 60) }
   ];
 
+  // Helper de risco
+  const isRiskValue = (v: number) => v >= 180 || v <= 70 || (v > 170 && v < 180) || (v >= 70 && v < 80);
+  // Série apenas para destacar os trechos de risco (sobreposição)
+  const predictionRiskOverlay = predictionData.map(p => ({ time: p.time, glucose: isRiskValue(p.glucose) ? p.glucose : null }));
+
+  // Detecção de risco para a previsão (hipo/hiper ou proximidade de 10 mg/dL)
+  const hyperOut = predictionData.some(p => p.glucose >= 180);
+  const hypoOut = predictionData.some(p => p.glucose <= 70);
+  const hyperNear = predictionData.some(p => p.glucose > 170 && p.glucose < 180);
+  const hypoNear = predictionData.some(p => p.glucose >= 70 && p.glucose < 80);
+  const hasAnyWarning = hyperOut || hypoOut || hyperNear || hypoNear;
+
+  const warningMessage = (() => {
+    if (hyperOut && hypoOut) return 'Alerta: previsão em zonas de hipo e hiperglicemia.';
+    if (hyperOut) return 'Alerta: previsão em zona de hiperglicemia.';
+    if (hypoOut) return 'Alerta: previsão em zona de hipoglicemia.';
+    if (hyperNear && hypoNear) return 'Atenção: previsão próxima das zonas de hipo e hiperglicemia.';
+    if (hyperNear) return 'Atenção: previsão próxima da zona de hiperglicemia.';
+    if (hypoNear) return 'Atenção: previsão próxima da zona de hipoglicemia.';
+    return '';
+  })();
+
   const glucoseStatus = getGlucoseStatus(currentGlucose);
+  // Texto curto para aviso inline ao lado do status atual
+  const inlineWarningText = hyperOut
+    ? 'Risco de Hipercglicemia'
+    : hypoOut
+    ? 'Risco de Hiperglicemia'
+    : 'Previsão em risco';
+
+  // Dot único com cor condicional
+  const RiskAwareDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    const v = payload?.glucose as number | undefined;
+    if (v == null) return null;
+    const risk = isRiskValue(v);
+    const color = risk ? '#3B5675' : '#CAE5F2';
+    return <circle cx={cx} cy={cy} r={5} fill={color} stroke={color} strokeWidth={2} />;
+  };
+
+  // Tooltip customizado para mostrar um único valor por ponto
+  const GlucosePredictionTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    const areaEntry = payload.find((e: any) => e.dataKey === 'glucose') || payload[0];
+    const dataPoint = areaEntry?.payload;
+    const value = dataPoint?.glucose ?? dataPoint?.normalGlucose ?? dataPoint?.riskGlucose;
+    if (value == null) return null;
+    return (
+      <div style={{
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: 8,
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+        padding: '6px 10px'
+      }}>
+        <div style={{ fontWeight: 600, color: '#3B5675' }}>{value} mg/dL</div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-medical-bg p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-medical bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-[#3B5675]">
             Monitor de Glicose
           </h1>
           <p className="text-muted-foreground">
@@ -97,21 +158,32 @@ const GlucoseMonitor = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-primary" />
+                  <Zap className="h-5 w-5 text-[#3B5675]" />
                   <span className="text-sm font-medium text-muted-foreground">Glicose Atual</span>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-primary">{currentGlucose}</span>
-                  <span className="text-xl text-muted-foreground">mg/dL</span>
-                </div>
-                <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${glucoseStatus.bgColor} ${glucoseStatus.color}`}>
-                  {glucoseStatus.status}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold text-[#3B5675]">{currentGlucose}</span>
+                    <span className="text-xl text-muted-foreground">mg/dL</span>
+                  </div>
+                  <div className={`inline-flex px-4 py-2 rounded-full text-base font-semibold ${glucoseStatus.bgColor} ${glucoseStatus.color}`}>
+                    {glucoseStatus.status}
+                  </div>
+                  {hasAnyWarning && (
+                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-warning/10 text-warning">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span>{inlineWarningText}</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="text-right space-y-2">
                 <Button 
                   onClick={measureGlucose}
-                  className="bg-gradient-medical hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+                  className="hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #3B5675 0%, #CAE5F2 100%)'
+                  }}
                 >
                   <Activity className="mr-2 h-4 w-4" />
                   Medir Glicose
@@ -149,7 +221,7 @@ const GlucoseMonitor = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={readings}>
+                <AreaChart data={readings}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="time" stroke="#64748b" />
                   <YAxis domain={[60, 220]} stroke="#64748b" />
@@ -161,35 +233,23 @@ const GlucoseMonitor = () => {
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}
                   />
-                  <ReferenceLine y={180} stroke="hsl(var(--glucose-warning))" strokeDasharray="5 5" label="Hiperglicemia" />
-                  <ReferenceLine y={70} stroke="hsl(var(--glucose-danger))" strokeDasharray="5 5" label="Hipoglicemia" />
-                  <Line 
+                  <ReferenceLine y={180} stroke="#3B5675" strokeDasharray="5 5" label="Hiperglicemia" />
+                  <ReferenceLine y={70} stroke="#3B5675" strokeDasharray="5 5" label="Hipoglicemia" />
+                  <Area 
                     type="monotone" 
                     dataKey="value" 
-                    stroke="hsl(var(--primary))" 
+                    stroke="#3B5675" 
+                    fill="rgba(59, 86, 117, 0.2)"
                     strokeWidth={3}
-                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 6 }}
-                    activeDot={{ r: 8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                    dot={{ fill: '#3B5675', strokeWidth: 2, r: 6 }}
+                    activeDot={{ r: 8, stroke: '#3B5675', strokeWidth: 2 }}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-success"></div>
-                    <span>Faixa Normal (70-180 mg/dL)</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-warning"></div>
-                    <span>Hiperglicemia (&gt; 180 mg/dL)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-danger"></div>
-                    <span>Hipoglicemia (&lt; 70 mg/dL)</span>
-                  </div>
-                </div>
+              <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+                <p>Faixa Normal (70-180 mg/dL)</p>
+                <p>Hiperglicemia (&gt; 180 mg/dL)</p>
+                <p>Hipoglicemia (&lt; 70 mg/dL)</p>
               </div>
             </CardContent>
           </Card>
@@ -198,8 +258,8 @@ const GlucoseMonitor = () => {
           <Card className="bg-gradient-card shadow-lg border-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-accent" />
-                Precisão de Predição
+                <Target className="h-5 w-5 text-[#CAE5F2]" />
+                Previsão de Glicose
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -207,35 +267,40 @@ const GlucoseMonitor = () => {
                 <AreaChart data={predictionData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="time" stroke="#64748b" />
-                  <YAxis domain={[60, 100]} stroke="#64748b" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                    }}
-                    formatter={(value) => [`${value}%`, 'Precisão']}
-                  />
+                  <YAxis domain={[60, 220]} stroke="#64748b" />
+                  <Tooltip content={<GlucosePredictionTooltip />} />
+                  <ReferenceLine y={180} stroke="#3B5675" strokeDasharray="5 5" label="Hiperglicemia" />
+                  <ReferenceLine y={70} stroke="#3B5675" strokeDasharray="5 5" label="Hipoglicemia" />
+                  {/* Linha/área base contínua */}
                   <Area 
-                    type="monotone" 
-                    dataKey="accuracy" 
-                    stroke="hsl(var(--accent))" 
-                    fill="hsl(var(--accent) / 0.2)"
+                    type="linear" 
+                    dataKey="glucose" 
+                    stroke="#CAE5F2" 
+                    fill="rgba(202, 229, 242, 0.35)"
                     strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    dot={<RiskAwareDot />}
+                    activeDot={<RiskAwareDot />}
+                  />
+                  {/* Sobreposição apenas nos trechos de risco (mesma linha, sem criar nova série visual) */}
+                  <Line
+                    type="linear"
+                    data={predictionRiskOverlay as any}
+                    dataKey="glucose"
+                    stroke="#3B5675"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={false}
+                    connectNulls={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-accent/10 rounded-lg">
-                  <div className="text-2xl font-bold text-accent">97%</div>
-                  <div className="text-sm text-muted-foreground">agora</div>
+              {hasAnyWarning && (
+                <div className="mt-3 text-center">
+                  <span className="text-sm font-semibold" style={{ color: '#3B5675' }}>{warningMessage}</span>
                 </div>
-                <div className="text-center p-3 bg-accent/10 rounded-lg">
-                  <div className="text-2xl font-bold text-accent">75%</div>
-                  <div className="text-sm text-muted-foreground">daqui 1h</div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -247,10 +312,10 @@ const GlucoseMonitor = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Média Últimas 24h</p>
-                  <p className="text-3xl font-bold text-primary">{calculateAverage()}</p>
+                  <p className="text-3xl font-bold text-[#3B5675]">{calculateAverage()}</p>
                   <p className="text-sm text-muted-foreground">mg/dL</p>
                 </div>
-                <Activity className="h-8 w-8 text-primary opacity-60" />
+                <Activity className="h-8 w-8 text-[#3B5675] opacity-60" />
               </div>
             </CardContent>
           </Card>
@@ -260,10 +325,10 @@ const GlucoseMonitor = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Tempo no Alvo</p>
-                  <p className="text-3xl font-bold text-accent">{calculateTimeInRange()}%</p>
+                  <p className="text-3xl font-bold text-[#3B5675]">{calculateTimeInRange()}%</p>
                   <p className="text-sm text-muted-foreground">das leituras</p>
                 </div>
-                <Target className="h-8 w-8 text-accent opacity-60" />
+                <Target className="h-8 w-8 text-[#3B5675] opacity-60" />
               </div>
             </CardContent>
           </Card>
@@ -272,14 +337,27 @@ const GlucoseMonitor = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Próxima Medição</p>
-                  <p className="text-3xl font-bold text-warning">5</p>
-                  <p className="text-sm text-muted-foreground">min</p>
+                  <p className="text-sm font-medium text-muted-foreground">Precisão nas Previsões</p>
+                  <p className="text-3xl font-bold text-[#CAE5F2]">98,5</p>
+                  <p className="text-sm text-muted-foreground">%</p>
                 </div>
-                <Clock className="h-8 w-8 text-warning opacity-60" />
+                <Clock className="h-8 w-8 text-[#CAE5F2] opacity-60" />
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Voltar ao menu */}
+        <div className="mt-8 flex justify-center">
+          <Button
+            onClick={() => navigate('/')}
+            className="hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+            style={{
+              background: 'linear-gradient(135deg, #3B5675 0%, #CAE5F2 100%)'
+            }}
+          >
+            Retornar ao menu
+          </Button>
         </div>
       </div>
     </div>
