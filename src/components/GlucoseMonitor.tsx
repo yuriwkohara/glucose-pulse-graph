@@ -180,12 +180,13 @@ const GlucoseMonitor = () => {
               <div className="text-right space-y-2">
                 <Button 
                   onClick={measureGlucose}
-                  className="hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+                  className="hover:opacity-90 font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
                   style={{
-                    background: 'linear-gradient(135deg, #3B5675 0%, #CAE5F2 100%)'
+                    backgroundColor: '#CAE5F2',
+                    color: '#3B5675'
                   }}
                 >
-                  <Activity className="mr-2 h-4 w-4" />
+                  <Activity className="mr-2 h-4 w-4" style={{ color: '#3B5675' }} />
                   Medir Glicose
                 </Button>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -338,7 +339,7 @@ const GlucoseMonitor = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Precisão nas Previsões</p>
-                  <p className="text-3xl font-bold text-[#CAE5F2]">98,5</p>
+                  <p className="text-3xl font-bold text-[#CAE5F2]">95</p>
                   <p className="text-sm text-muted-foreground">%</p>
                 </div>
                 <Clock className="h-8 w-8 text-[#CAE5F2] opacity-60" />
@@ -351,9 +352,10 @@ const GlucoseMonitor = () => {
         <div className="mt-8 flex justify-center">
           <Button
             onClick={() => navigate('/')}
-            className="hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+            className="hover:opacity-90 font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
             style={{
-              background: 'linear-gradient(135deg, #3B5675 0%, #CAE5F2 100%)'
+              backgroundColor: '#CAE5F2',
+              color: '#3B5675'
             }}
           >
             Retornar ao menu

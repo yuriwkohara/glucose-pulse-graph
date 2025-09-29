@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import DietaPersonalizada from "./pages/DietaPersonalizada";
+import CalendarioRefeicoes from "./pages/CalendarioRefeicoes";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import PlanSelection from "./pages/PlanSelection";
@@ -53,6 +54,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <DietaPersonalizada />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/calendario"
+              element={
+                <ProtectedRoute>
+                  <CalendarioRefeicoes />
                 </ProtectedRoute>
               }
             />

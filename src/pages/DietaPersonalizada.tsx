@@ -1,14 +1,49 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 export default function DietaPersonalizada() {
+  const navigate = useNavigate();
   const [dietaGerada, setDietaGerada] = useState(false);
+  const [mostrarMacronutrientes, setMostrarMacronutrientes] = useState(false);
+  const [mostrarBotoesDias, setMostrarBotoesDias] = useState(false);
 
   const handleGerarDieta = () => {
     setDietaGerada(true);
   };
+
+  const handleMacronutrientesClick = () => {
+    setMostrarMacronutrientes(true);
+  };
+
+  const handleVoltarMacronutrientes = () => {
+    setMostrarMacronutrientes(false);
+  };
+
+  const handleVerTodosDias = () => {
+    setMostrarBotoesDias(true);
+  };
+
+  const handleVoltarBotoesDias = () => {
+    setMostrarBotoesDias(false);
+  };
+
+  // Função para obter o dia da semana atual
+  const getDiaAtual = () => {
+    const hoje = new Date();
+    const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
+    return diasSemana[hoje.getDay()];
+  };
+
+  // Dados dos macronutrientes (exemplo)
+  const dadosMacronutrientes = [
+    { name: 'Carboidratos', value: 45, color: '#3B5675' },
+    { name: 'Proteínas', value: 25, color: '#CAE5F2' },
+    { name: 'Gorduras', value: 30, color: '#8FA8C7' }
+  ];
 
   const diasDaSemana = [
     "SEGUNDA",
@@ -75,66 +110,212 @@ export default function DietaPersonalizada() {
   return (
     <div className="min-h-screen bg-medical-bg p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-[#3B5675]">
-            Dieta Personalizada
-          </h1>
-          <p className="text-muted-foreground">
-            Análise e geração expecífica dos seus dados
-          </p>
+        {/* Header com botão voltar */}
+        <div className="flex justify-between items-center">
+          <div className="text-center space-y-2 flex-1">
+            <h1 className="text-4xl font-bold text-[#3B5675]">
+              Dieta Personalizada
+            </h1>
+            <p className="text-muted-foreground">
+              Análise e geração expecífica dos seus dados
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate('/')}
+            className="hover:opacity-90 font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+            style={{
+              backgroundColor: '#CAE5F2',
+              color: '#3B5675'
+            }}
+          >
+            Voltar para o menu
+          </Button>
         </div>
-        <div className="flex justify-center">
-          <Card className="bg-white/70 backdrop-blur-sm max-w-2xl w-full">
-            <CardHeader>
-              <CardTitle className="text-[#3B5675]">Geração de Plano</CardTitle>
-              <CardDescription>
-                Clique no botão abaixo para gerar sua dieta personalizada com base nas suas preferências e objetivos.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center">
-                <Button size="lg" onClick={handleGerarDieta}>Gerar Dieta</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {dietaGerada && (
-          <div className="mt-8">
-            <Card className="bg-white/70 backdrop-blur-sm">
+        {!dietaGerada && (
+          <div className="flex justify-center">
+            <Card className="bg-white/70 backdrop-blur-sm max-w-2xl w-full">
               <CardHeader>
-                <CardTitle className="text-[#3B5675] text-center">
-                  Com base nas suas características foi gerada a seguinte dieta:
-                </CardTitle>
+                <CardTitle className="text-[#3B5675]">Geração de Plano</CardTitle>
+                <CardDescription>
+                  Clique no botão abaixo para gerar sua dieta personalizada com base nas suas preferências e objetivos.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  {diasDaSemana.map((dia, index) => (
-                    <AccordionItem key={index} value={`item-${index}`} className="border-b border-gray-200 last:border-b-0">
-                      <AccordionTrigger className="text-xl font-bold text-[#3B5675] hover:no-underline hover:text-[#3B5675] py-4">
-                        {dia}
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-4">
-                        <div className="space-y-2">
-                          {dietaSemanal[dia as keyof typeof dietaSemanal].map((refeicao, refeicaoIndex) => (
-                            <div key={refeicaoIndex} className="text-sm text-muted-foreground">
-                              • {refeicao}
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-                
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <h4 className="text-lg font-semibold text-[#3B5675] mb-3">Dicas adicionais:</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Priorizar fibras: chia, linhaça, vegetais crus; Evitar farinhas refinadas e açúcares simples
-                  </p>
+                <div className="flex justify-center">
+                  <Button 
+                    size="lg" 
+                    onClick={handleGerarDieta}
+                    className="hover:opacity-90 font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+                    style={{
+                      backgroundColor: '#CAE5F2',
+                      color: '#3B5675'
+                    }}
+                  >
+                    Gerar Dieta
+                  </Button>
                 </div>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {dietaGerada && (
+          <div className="mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Dieta - Coluna Esquerda */}
+              <Card className="bg-white/70 backdrop-blur-sm lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-[#3B5675] text-center">
+                    Dieta Personalizada gerada:
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    {diasDaSemana.map((dia, index) => (
+                      <AccordionItem key={index} value={`item-${index}`} className="border-b border-gray-200 last:border-b-0">
+                        <AccordionTrigger className="text-xl font-bold text-[#3B5675] hover:no-underline hover:text-[#3B5675] py-4">
+                          {dia}
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-4">
+                          <div className="space-y-2">
+                            {dietaSemanal[dia as keyof typeof dietaSemanal].map((refeicao, refeicaoIndex) => (
+                              <div key={refeicaoIndex} className="text-sm text-muted-foreground">
+                                • {refeicao}
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                  
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <h4 className="text-lg font-semibold text-[#3B5675] mb-3">Dicas adicionais:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Priorizar fibras: chia, linhaça, vegetais crus; Evitar farinhas refinadas e açúcares simples
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Coluna Direita */}
+              <div className="lg:col-span-1 space-y-4">
+                {/* Acompanhe a sua dieta */}
+                <Card className="bg-white/70 backdrop-blur-sm self-start">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-[#3B5675] text-center">
+                      Acompanhe a sua dieta
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-4 px-4">
+                    <div className="text-center space-y-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Acompanhe sua dieta de forma interativa, em formato de check-list, além de receber mais detalhes sobre cada alimento e refeição!
+                      </p>
+                      <Button 
+                        onClick={() => navigate('/calendario')}
+                        className="hover:opacity-90 font-semibold px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl text-sm"
+                        style={{
+                          backgroundColor: '#CAE5F2',
+                          color: '#3B5675'
+                        }}
+                      >
+                        Abrir Calendário
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Macronutrientes */}
+                <Card className="bg-white/70 backdrop-blur-sm self-start">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-[#3B5675] text-center">
+                      Macronutrientes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-4 px-4">
+                    {!mostrarBotoesDias ? (
+                      <div className="space-y-3">
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+                            Macronutrientes para hoje ({getDiaAtual()})
+                          </p>
+                        </div>
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={dadosMacronutrientes}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={50}
+                                outerRadius={100}
+                                paddingAngle={5}
+                                dataKey="value"
+                              >
+                                {dadosMacronutrientes.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Legend 
+                                verticalAlign="bottom" 
+                                height={36}
+                                formatter={(value, entry) => (
+                                  <span style={{ color: entry.color, fontSize: '12px' }}>
+                                    {value} ({entry.payload.value}%)
+                                  </span>
+                                )}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <Button 
+                          onClick={handleVerTodosDias}
+                          className="w-full hover:opacity-90 font-medium text-sm py-2 border-0"
+                          style={{
+                            backgroundColor: '#CAE5F2',
+                            color: '#3B5675'
+                          }}
+                        >
+                          Ver Todos os Dias
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground leading-relaxed text-center mb-3">
+                          Visualize a distribuição de carboidratos, proteínas e gorduras na sua dieta personalizada.
+                        </p>
+                        <div className="space-y-1">
+                          {diasDaSemana.map((dia, index) => (
+                            <Button 
+                              key={index}
+                              onClick={handleMacronutrientesClick}
+                              className="w-full hover:opacity-90 font-medium text-sm py-2 border-0"
+                              style={{
+                                backgroundColor: '#CAE5F2',
+                                color: '#3B5675'
+                              }}
+                            >
+                              {dia}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button 
+                          onClick={handleVoltarBotoesDias}
+                          className="w-full hover:opacity-90 font-medium text-sm py-2 border-0 mt-2"
+                          style={{
+                            backgroundColor: '#3B5675',
+                            color: '#CAE5F2'
+                          }}
+                        >
+                          Voltar
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         )}
       </div>

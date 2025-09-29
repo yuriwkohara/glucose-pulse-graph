@@ -52,31 +52,44 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 justify-center items-center">
-              <Button 
-                onClick={handleMonitorClick}
-                size="lg"
-                className="hover:opacity-90 text-white font-semibold px-8 py-4 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl text-lg"
-                style={{
-                  background: 'linear-gradient(135deg, #3B5675 0%, #CAE5F2 100%)'
-                }}
-              >
-                <Activity className="mr-3 h-5 w-5" />
-                Monitor de Glicose
-                <ArrowRight className="ml-3 h-5 w-5" />
-              </Button>
-              <Button 
-                onClick={handleDietaClick}
-                size="lg"
-                className="hover:opacity-90 text-white font-semibold px-8 py-4 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl text-lg"
-                style={{
-                  background: 'linear-gradient(135deg, #3B5675 0%, #CAE5F2 100%)'
-                }}
-              >
-                <Utensils className="mr-3 h-5 w-5" />
-                Dieta Personalizada
-                <ArrowRight className="ml-3 h-5 w-5" />
-              </Button>
+            <div className="flex flex-col md:flex-row gap-6 justify-center items-center max-w-4xl mx-auto">
+              {/* Card Monitor de Glicose */}
+              <Card className="w-full max-w-sm bg-white shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer" onClick={handleMonitorClick}>
+                <CardContent className="p-6 text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#CAE5F2' }}>
+                      <Activity className="w-6 h-6" style={{ color: '#3B5675' }} />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold mb-3" style={{ color: '#3B5675' }}>Monitor de Glicose</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Acompanhe seus níveis de glicose em tempo real com monitoramento contínuo e alertas inteligentes.
+                  </p>
+                  <div className="flex items-center justify-center font-medium text-sm transition-colors" style={{ color: '#3B5675' }}>
+                    Acessar Monitor
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card Dieta Personalizada */}
+              <Card className="w-full max-w-sm bg-white shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer" onClick={handleDietaClick}>
+                <CardContent className="p-6 text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#CAE5F2' }}>
+                      <Utensils className="w-6 h-6" style={{ color: '#3B5675' }} />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold mb-3" style={{ color: '#3B5675' }}>Dieta Personalizada</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Receba recomendações nutricionais personalizadas baseadas no seu perfil glicêmico.
+                  </p>
+                  <div className="flex items-center justify-center font-medium text-sm transition-colors" style={{ color: '#3B5675' }}>
+                    Acessar Dieta
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
